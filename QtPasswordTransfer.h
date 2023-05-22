@@ -27,7 +27,10 @@ public:
 	QtPasswordTransfer(QWidget* parent = nullptr);
 	~QtPasswordTransfer();
 	void ShowPasswordLine(std::map<std::string, std::string>*);
+	void ShowPasswordLineScroll(std::map<std::string, std::string>*);
+
 	void DeletePasswordLines(unsigned int);
+	void DeletePasswordLinesScroll(unsigned int);
 
 
 private:

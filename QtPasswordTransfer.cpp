@@ -7,7 +7,7 @@ QtPasswordTransfer::QtPasswordTransfer(QWidget* parent)
 
 	connect(ui.WritingPasswordButton, SIGNAL(clicked()), this, SLOT(WritingPasswordButtonClicked()));
 	std::map<std::string, std::string>* aFileMap = PushPasswordsToMap();
-	ShowPasswordLine(aFileMap);
+	ShowPasswordLineScroll(aFileMap);
 
 
 	//ui.WritingPasswordButton->resize(160, ui.WritingPasswordButton->height());
@@ -32,12 +32,15 @@ void QtPasswordTransfer::WritingPasswordButtonClicked()
 	AddPassword(SoucePassword, PasswordItself);
 
 	//emit DeleteDynamicWidget();
-	DeletePasswordLines(aFileMap->size());
-	ShowPasswordLine(aFileMap);
+	DeletePasswordLinesScroll(aFileMap->size());
+	ShowPasswordLineScroll(aFileMap);
 
 };
 
-
+void QtPasswordTransfer::DeletePasswordLinesScroll(unsigned int SizeOfMap)
+{
+	ui.scrollArea->widget()->deleteLater();
+}
 void QtPasswordTransfer::DeletePasswordLines(unsigned int SizeOfMap)
 {
 
@@ -86,6 +89,24 @@ void QtPasswordTransfer::ShowPasswordLine(std::map<std::string, std::string>* Fi
 		connect(PasswordButtonWidget, &QPushButton::clicked,
 			this, [=]() { CopingPassword(Iterator->second); });
 	}
+}
+void QtPasswordTransfer::ShowPasswordLineScroll(std::map<std::string, std::string>* FileMap)
+{
+	//ui.scrollAreaWidgetContents->deleteLater();
+	QWidget* ScrollWidget = new QWidget;
+	ScrollWidget->setLayout(new QVBoxLayout);
+	ScrollWidget->layout()->setAlignment(Qt::AlignTop);
+	ui.scrollArea->setWidget(ScrollWidget);
+//	QVBoxLayout* ScrollLayout = new QVBoxLayout(this);
+	for (auto Iterator{ FileMap->begin() }; Iterator != FileMap->end(); ++Iterator)
+	{		
+		QPushButton* PasswordButtonWidget = new QPushButton(Iterator->first.c_str());
+		PasswordButtonWidget->setStyleSheet("font:bold; font-size: 16px; background-color: rgb(100, 114, 170)");
+		ScrollWidget->layout()->addWidget(PasswordButtonWidget);
+		connect(PasswordButtonWidget, &QPushButton::clicked,
+			this, [=]() { CopingPassword(Iterator->second); });
+	}
+	
 }
 void QtPasswordTransfer::CopingPassword(std::string Password)
 {
