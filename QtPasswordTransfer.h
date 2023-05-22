@@ -52,9 +52,5 @@ private slots:
 std::string DecryptPassword(std::string& aPassword);
 void IncryptPassword(std::string& aPassword);
 std::map<std::string, std::string>* PushPasswordsToMap();
-
-
-
-
 void AddPassword(std::string, std::string);
 
