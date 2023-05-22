@@ -27,7 +27,7 @@ void QtPasswordTransfer::WritingPasswordButtonClicked()
 	}
 
 	std::map<std::string, std::string>* aFileMap = PushPasswordsToMap();
-	aFileMap->insert(std::make_pair(SoucePassword, PasswordItself)); //adding unencrypted password to map before writing encrypter to file to skip 1 function
+	aFileMap->insert_or_assign(SoucePassword, PasswordItself); //adding unencrypted password to map before writing encrypter to file to skip 1 function
 
 	AddPassword(SoucePassword, PasswordItself);
 
