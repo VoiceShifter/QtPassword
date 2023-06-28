@@ -6,23 +6,16 @@ sqlite3_stmt* Statement = nullptr; //pointer to statement
 
 QtPasswordManager::QtPasswordManager(QWidget* parent)
 	: QMainWindow(parent)
-{
+{	
 	ui.setupUi(this);
 	char* ContainerForError = nullptr; //pointer to container for error
 
-
-
-
 	sqlite3_open("Passwords.db", &db);
-	int Code = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Passwords (Source TEXT, Password TEXT)", NULL, NULL, &ContainerForError);
+	signed int Code = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Passwords (Source TEXT PRIMARY KEY, Password TEXT);", NULL, NULL, &ContainerForError);
 	if (Code != SQLITE_OK)
 	{
 		std::cout << "Error\n" << ContainerForError;
 	}
-
-
-
-
 
 
 	connect(ui.WritingPasswordButton, SIGNAL(clicked()), this, SLOT(WritingPasswordButtonClicked()));
@@ -140,8 +133,14 @@ void AddPassword(std::string Source, std::string Password, sqlite3* db)
 
 	IncryptPassword(Password);
 
-	////////////////////
-	int Status = sqlite3_exec(db, ("INSERT INTO Passwords VALUES ('" + Source + "', '" + Password + "')").c_str(), NULL, NULL, NULL);
+	
+	sqlite3_prepare_v2(db, ("SELECT * FROM Passwords WHERE Source = '" + Source + "'").c_str(), -1, &Statement, NULL);
+	if (sqlite3_step(Statement) == SQLITE_ROW)	
+	{
+		sqlite3_exec(db, ("UPDATE Passwords SET Password = '" + Password + "' WHERE Source = '" + Source + "'").c_str(), NULL, NULL, NULL);
+		return;
+	}
+	signed int Status = sqlite3_exec(db, ("INSERT INTO Passwords VALUES ('" + Source + "', '" + Password + "')").c_str(), NULL, NULL, NULL);
 	if (Status != SQLITE_OK)
 	{
 		std::cout << "Error\n";
