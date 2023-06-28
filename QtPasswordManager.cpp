@@ -42,6 +42,9 @@ void QtPasswordManager::WritingPasswordButtonClicked()
 	AddPassword(SoucePassword, PasswordItself, db);
 
 	DeletePasswordLinesScroll(aFileMap->size());
+	delete aFileMap;
+	aFileMap = PushPasswordsToMap(db, Statement);
+
 	ShowPasswordLineScroll(aFileMap);
 
 };
@@ -131,20 +134,30 @@ void AddPassword(std::string Source, std::string Password, sqlite3* db)
 		std::cerr << "cant open file\n";
 	}
 
+	if (Password == "0")
+	{
+		sqlite3_exec(db, ("DELETE FROM Passwords WHERE Source = '" + Source + "'").c_str(), NULL, NULL, NULL);
+
+		return;
+	}
+
 	IncryptPassword(Password);
 
-	
 	sqlite3_prepare_v2(db, ("SELECT * FROM Passwords WHERE Source = '" + Source + "'").c_str(), -1, &Statement, NULL);
 	if (sqlite3_step(Statement) == SQLITE_ROW)	
 	{
 		sqlite3_exec(db, ("UPDATE Passwords SET Password = '" + Password + "' WHERE Source = '" + Source + "'").c_str(), NULL, NULL, NULL);
 		return;
 	}
+
+
 	signed int Status = sqlite3_exec(db, ("INSERT INTO Passwords VALUES ('" + Source + "', '" + Password + "')").c_str(), NULL, NULL, NULL);
 	if (Status != SQLITE_OK)
 	{
 		std::cout << "Error\n";
 	}
+
+	
 	////////////////////
 
 	aFile << Source << ' ' << Password << '\n';
@@ -171,6 +184,7 @@ std::map<std::string, std::string>* PushPasswordsToMap(sqlite3* db, sqlite3_stmt
 	{
 		exit(1);
 	}
+
 
 	std::map<std::string, std::string>* aPasswordBook = new std::map<std::string, std::string>;
 	sqlite3_prepare_v2(db, "SELECT * FROM Passwords", -1, &Statement, NULL); //getting data from database
