@@ -19,8 +19,8 @@ QtPasswordManager::QtPasswordManager(QWidget* parent)
 
 
 	connect(ui.WritingPasswordButton, SIGNAL(clicked()), this, SLOT(WritingPasswordButtonClicked()));
-	std::map<std::string, std::string>* aFileMap = PushPasswordsToMap(db, Statement);
-	ShowPasswordLineScroll(aFileMap);
+	std::map<std::string, std::string>* aDbMap = PushPasswordsToMap(db, Statement);
+	ShowPasswordLineScroll(aDbMap);
 
 }
 
@@ -36,61 +36,26 @@ void QtPasswordManager::WritingPasswordButtonClicked()
 		return;
 	}
 
-	std::map<std::string, std::string>* aFileMap = PushPasswordsToMap(db, Statement);
-	aFileMap->insert_or_assign(SoucePassword, PasswordItself); //adding unencrypted password to map before writing encrypter to file to skip 1 function
+	std::map<std::string, std::string>* aDbMap = PushPasswordsToMap(db, Statement);
+	aDbMap->insert_or_assign(SoucePassword, PasswordItself); //adding unencrypted password to map before writing encrypter to file to skip 1 function
 
 	AddPassword(SoucePassword, PasswordItself, db);
 
-	DeletePasswordLinesScroll(aFileMap->size());
-	delete aFileMap;
-	aFileMap = PushPasswordsToMap(db, Statement);
+	DeletePasswordLinesScroll(aDbMap->size());
+	delete aDbMap;
+	aDbMap = PushPasswordsToMap(db, Statement);
 
-	ShowPasswordLineScroll(aFileMap);
+	ShowPasswordLineScroll(aDbMap);
 
 };
+
 
 void QtPasswordManager::DeletePasswordLinesScroll(unsigned int SizeOfMap)
 {
 	ui.scrollArea->widget()->deleteLater();
 }
 
-void QtPasswordManager::DeletePasswordLines(unsigned int SizeOfMap)
-{
 
-	QVBoxLayout* LayoutForText = qobject_cast<QVBoxLayout*>(ui.Resourses->layout());
-	QVBoxLayout* LayoutForPasswordButtons = qobject_cast<QVBoxLayout*>(ui.PasswordsButtons->layout());
-
-	for (size_t Counter{ SizeOfMap }; Counter >= 2; Counter--)
-	{
-
-		LayoutForText->itemAt(Counter)->widget()->deleteLater();
-		LayoutForPasswordButtons->itemAt(Counter)->widget()->deleteLater();
-
-	}
-
-}
-
-
-void QtPasswordManager::ShowPasswordLine(std::map<std::string, std::string>* FileMap)
-{
-	QVBoxLayout* LayoutForText = qobject_cast<QVBoxLayout*>(ui.Resourses->layout());
-	QVBoxLayout* LayoutForPasswordButtons = qobject_cast<QVBoxLayout*>(ui.PasswordsButtons->layout());
-	for (auto Iterator{ FileMap->begin() }; Iterator != FileMap->end(); ++Iterator)
-	{
-		QLabel* PasswordSourceWidget = new QLabel(Iterator->first.c_str());
-		QFont SourceFont{ PasswordSourceWidget->font() };
-		SourceFont.setPointSizeF(13);
-		PasswordSourceWidget->setFont(SourceFont);
-
-		LayoutForText->insertWidget(2, PasswordSourceWidget);
-
-		QPushButton* PasswordButtonWidget = new QPushButton("Copy password");
-		LayoutForPasswordButtons->insertWidget(2, PasswordButtonWidget);
-
-		connect(PasswordButtonWidget, &QPushButton::clicked,
-			this, [=]() { CopingPassword(Iterator->second); });
-	}
-}
 void QtPasswordManager::ShowPasswordLineScroll(std::map<std::string, std::string>* FileMap)
 {
 	QWidget* ScrollWidget = new QWidget;
@@ -115,10 +80,12 @@ void QtPasswordManager::CopingPassword(std::string Password)
 	Clipboard->setText(QString{ Password.c_str() }, QClipboard::Clipboard);
 }
 
+
 void QtPasswordManager::DelitingWithoutClicks()
 {
 	delete sender();
 }
+
 
 QtPasswordManager::~QtPasswordManager()
 {}
@@ -126,13 +93,6 @@ QtPasswordManager::~QtPasswordManager()
 
 void AddPassword(std::string Source, std::string Password, sqlite3* db)
 {
-
-
-	std::fstream aFile(PathToPasswordFile, std::fstream::app | std::fstream::in);
-	if (!aFile.is_open())
-	{
-		std::cerr << "cant open file\n";
-	}
 
 	if (Password == "0")
 	{
@@ -158,10 +118,6 @@ void AddPassword(std::string Source, std::string Password, sqlite3* db)
 	}
 
 	
-	////////////////////
-
-	aFile << Source << ' ' << Password << '\n';
-	aFile.close();
 
 }
 
@@ -179,12 +135,6 @@ void IncryptPassword(std::string& aPassword)
 std::map<std::string, std::string>* PushPasswordsToMap(sqlite3* db, sqlite3_stmt* Statement)
 {
 	std::string aPassword{}, aSource{};
-	std::fstream aFile(PathToPasswordFile, std::fstream::in | std::fstream::app);
-	if (!aFile.is_open())
-	{
-		exit(1);
-	}
-
 
 	std::map<std::string, std::string>* aPasswordBook = new std::map<std::string, std::string>;
 	sqlite3_prepare_v2(db, "SELECT * FROM Passwords", -1, &Statement, NULL); //getting data from database
@@ -198,16 +148,6 @@ std::map<std::string, std::string>* PushPasswordsToMap(sqlite3* db, sqlite3_stmt
 
 	return aPasswordBook;
 
-
-
-
-
-	while (aFile >> aSource >> aPassword)
-	{
-
-		aPasswordBook->insert(std::make_pair(aSource, DecryptPassword(aPassword)));
-	}
-	return aPasswordBook;
 }
 
 
